@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,7 +13,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Task — модель GORM + JSON теги
+// ===== Модель для БД =====
 type Task struct {
 	ID        string         `gorm:"primaryKey" json:"id"`
 	Task      string         `json:"task"`
@@ -24,13 +23,23 @@ type Task struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+// ===== DTO (входные данные) =====
+type CreateTaskRequest struct {
+	Task   string `json:"task" validate:"required"`
+	IsDone bool   `json:"is_done"`
+}
+
+type UpdateTaskRequest struct {
+	Task   *string `json:"task"`
+	IsDone *bool   `json:"is_done"`
+}
+
 var db *gorm.DB
 
 func main() {
-	// Читаем DSN из окружения (docker-compose задаст DATABASE_DSN)
+	// Читаем DSN из окружения
 	dsn := os.Getenv("DATABASE_DSN")
 	if dsn == "" {
-		// значение по умолчанию для локальной разработки
 		dsn = "postgres://myuser:mypass@localhost:5432/tasksdb?sslmode=disable"
 	}
 
@@ -40,7 +49,7 @@ func main() {
 		panic("failed to connect db: " + err.Error())
 	}
 
-	// Миграция схемы (создаст таблицу tasks если её нет)
+	// Авто-миграция
 	if err := db.AutoMigrate(&Task{}); err != nil {
 		panic("auto migrate failed: " + err.Error())
 	}
@@ -48,16 +57,16 @@ func main() {
 	e := echo.New()
 
 	// Роуты
-	e.POST("/tasks", postTask)         // Create (сохранить в DB)
-	e.GET("/tasks", listTasks)         // Read (все из DB)
-	e.GET("/tasks/:id", getTask)       // Read (одна)
-	e.PATCH("/tasks/:id", updateTask)  // Update (частичное)
-	e.DELETE("/tasks/:id", deleteTask) // Delete (soft)
+	e.POST("/tasks", postTask)
+	e.GET("/tasks", listTasks)
+	e.GET("/tasks/:id", getTask)
+	e.PATCH("/tasks/:id", updateTask)
+	e.DELETE("/tasks/:id", deleteTask)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
-// Попытки подключения с retry (полезно при docker-compose, чтобы ждать postgres)
+// ===== Retry подключение к Postgres =====
 func connectWithRetry(dsn string, attempts int, wait time.Duration) (*gorm.DB, error) {
 	var db *gorm.DB
 	var err error
@@ -79,15 +88,14 @@ func connectWithRetry(dsn string, attempts int, wait time.Duration) (*gorm.DB, e
 	return nil, err
 }
 
-// ===== POST /tasks ====
-// Принимаем JSON { "task": "...", "is_done": true/false } и сохраняем в БД
+// ===== POST /tasks =====
 func postTask(c echo.Context) error {
-	var req struct {
-		Task   string `json:"task"`
-		IsDone bool   `json:"is_done"`
-	}
+	var req CreateTaskRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+	}
+	if req.Task == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "task is required"})
 	}
 
 	t := Task{
@@ -101,8 +109,7 @@ func postTask(c echo.Context) error {
 	return c.JSON(http.StatusCreated, t)
 }
 
-// ===== GET /tasks ====
-// Возвращаем все таски (soft-deleted не выдаются автоматически GORM)
+// ===== GET /tasks =====
 func listTasks(c echo.Context) error {
 	var tasks []Task
 	if err := db.Find(&tasks).Error; err != nil {
@@ -111,8 +118,7 @@ func listTasks(c echo.Context) error {
 	return c.JSON(http.StatusOK, tasks)
 }
 
-// ===== GET /tasks/:id ====
-// Вернуть одну задачу по id
+// ===== GET /tasks/:id =====
 func getTask(c echo.Context) error {
 	id := c.Param("id")
 	var t Task
@@ -122,9 +128,7 @@ func getTask(c echo.Context) error {
 	return c.JSON(http.StatusOK, t)
 }
 
-// ===== PATCH /tasks/:id ====
-// Частичное обновление: клиент может прислать {"task":"...", "is_done":true}
-// Используем map чтобы поддержать частичное обновление
+// ===== PATCH /tasks/:id =====
 func updateTask(c echo.Context) error {
 	id := c.Param("id")
 
@@ -133,30 +137,27 @@ func updateTask(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "task not found"})
 	}
 
-	var data map[string]interface{}
-	if err := json.NewDecoder(c.Request().Body).Decode(&data); err != nil {
+	var req UpdateTaskRequest
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 	}
 
-	// Защита от изменения служебных полей
-	delete(data, "id")
-	delete(data, "created_at")
-	delete(data, "updated_at")
-	delete(data, "deleted_at")
+	// Обновляем только то, что пришло
+	if req.Task != nil {
+		existing.Task = *req.Task
+	}
+	if req.IsDone != nil {
+		existing.IsDone = *req.IsDone
+	}
 
-	if err := db.Model(&existing).Updates(data).Error; err != nil {
+	if err := db.Save(&existing).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "db error"})
 	}
 
-	// Вернём обновлённую запись
-	if err := db.First(&existing, "id = ?", id).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "db error"})
-	}
 	return c.JSON(http.StatusOK, existing)
 }
 
-// ===== DELETE /tasks/:id ====
-// Мягкое удаление: GORM пометит DeletedAt, запись не будет возвращаться в Find/First
+// ===== DELETE /tasks/:id =====
 func deleteTask(c echo.Context) error {
 	id := c.Param("id")
 	var t Task
