@@ -2,12 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"taskApp/internal/model"
 
 	"github.com/labstack/echo/v4"
-	"github.com/you/tasks/internal/model"
-	"github.com/you/tasks/internal/repository"
+	"taskApp/internal/repository"
 )
 
+// TaskHandler — использует репозиторий вместо прямого доступа к gorm.DB
 type TaskHandler struct {
 	repo repository.TaskRepository
 }
@@ -16,7 +17,7 @@ func NewTaskHandler(r repository.TaskRepository) *TaskHandler {
 	return &TaskHandler{repo: r}
 }
 
-// DTOs
+// DTOs — оставлены как в оригинале
 type CreateTaskRequest struct {
 	Task   string `json:"task" validate:"required"`
 	IsDone bool   `json:"is_done"`
@@ -27,6 +28,7 @@ type UpdateTaskRequest struct {
 	IsDone *bool   `json:"is_done"`
 }
 
+// PostTask — соответствует оригинальной реализации, только использует repo
 func (h *TaskHandler) PostTask(c echo.Context) error {
 	var req CreateTaskRequest
 	if err := c.Bind(&req); err != nil {
@@ -40,7 +42,6 @@ func (h *TaskHandler) PostTask(c echo.Context) error {
 		Task:   req.Task,
 		IsDone: req.IsDone,
 	}
-
 	if err := h.repo.Create(t); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "db error"})
 	}

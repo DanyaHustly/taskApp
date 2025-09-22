@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/labstack/echo/v4"
-	"github.com/you/tasks/internal/handler"
-	"github.com/you/tasks/internal/repository"
+	"taskApp/internal/handler"
 )
 
 type Server struct {

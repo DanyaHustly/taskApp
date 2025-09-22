@@ -4,16 +4,14 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="18bcaf59-e75c-428d-8f6b-fd8271412781" name="Changes" comment="исправил момент с мапой и delete(data, &quot;id&quot;)....">
-      <change afterPath="$PROJECT_DIR$/internal/config/config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/db/postgres.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/handler/task_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/model/task.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/repository/task_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/main.go" afterDir="false" />
+    <list default="true" id="18bcaf59-e75c-428d-8f6b-fd8271412781" name="Changes" comment="Структурировал">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/server/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/db/postgres.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/db/postgres.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/handler/task_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/handler/task_handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/model/task.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/model/task.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/repository/task_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/repository/task_repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/server.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,15 +72,26 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/cmd/server" />
       <recent name="$PROJECT_DIR$/cmd" />
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="go build taskApp" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+    <configuration name="go build taskApp/cmd/server" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="taskApp" />
       <working_directory value="$PROJECT_DIR$" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </EXTENSION>
       <kind value="PACKAGE" />
-      <package value="taskApp" />
+      <package value="taskApp/cmd/server" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
@@ -114,7 +123,8 @@
     <MESSAGE value="3 задание" />
     <MESSAGE value="выполнил 3 задание полностью" />
     <MESSAGE value="исправил момент с мапой и delete(data, &quot;id&quot;)...." />
-    <option name="LAST_COMMIT_MESSAGE" value="исправил момент с мапой и delete(data, &quot;id&quot;)...." />
+    <MESSAGE value="Структурировал" />
+    <option name="LAST_COMMIT_MESSAGE" value="Структурировал" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

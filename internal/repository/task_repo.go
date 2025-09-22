@@ -3,8 +3,8 @@ package repository
 import (
 	"errors"
 
-	"github.com/you/tasks/internal/model"
 	"gorm.io/gorm"
+	"taskApp/internal/model"
 )
 
 type TaskRepository interface {

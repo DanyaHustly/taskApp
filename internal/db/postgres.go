@@ -11,17 +11,17 @@ import (
 
 // ConnectWithRetry пытается подключиться attempts раз с паузой wait
 func ConnectWithRetry(dsn string, attempts int, wait time.Duration) (*gorm.DB, error) {
-	var db *gorm.DB
+	var gormDB *gorm.DB
 	var err error
 	for i := 0; i < attempts; i++ {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		gormDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
 		if err == nil {
-			sqlDB, err2 := db.DB()
+			sqlDB, err2 := gormDB.DB()
 			if err2 == nil {
 				if err3 := sqlDB.Ping(); err3 == nil {
-					return db, nil
+					return gormDB, nil
 				} else {
 					err = err3
 				}

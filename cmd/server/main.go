@@ -1,43 +1,49 @@
 package main
 
 import (
-	"log"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/you/tasks/internal/config"
-	"github.com/you/tasks/internal/db"
-	"github.com/you/tasks/internal/handler"
-	"github.com/you/tasks/internal/model"
-	"github.com/you/tasks/internal/repository"
-	"github.com/you/tasks/internal/server"
+
+	"taskApp/internal/db"
+	"taskApp/internal/handler"
+	"taskApp/internal/model"
+	"taskApp/internal/repository"
 )
 
 func main() {
-	// Загружаем конфиг
-	cfg := config.Load()
+	// Читаем DSN из окружения
+	dsn := os.Getenv("DATABASE_DSN")
+	if dsn == "" {
+		dsn = "postgres://myuser:mypass@localhost:5432/tasksdb?sslmode=disable"
+	}
 
-	// Подключение к БД
-	gormDB, err := db.ConnectWithRetry(cfg.DatabaseDSN, 12, 3*time.Second)
+	// Подключаемся к БД (используем internal/db.ConnectWithRetry)
+	gormDB, err := db.ConnectWithRetry(dsn, 12, 3*time.Second)
 	if err != nil {
-		log.Fatalf("failed to connect db: %v", err)
+		panic("failed to connect db: " + err.Error())
 	}
 
-	// Миграция
+	// Авто-миграция (модель перенесена в internal/model)
 	if err := gormDB.AutoMigrate(&model.Task{}); err != nil {
-		log.Fatalf("auto migrate failed: %v", err)
+		panic("auto migrate failed: " + err.Error())
 	}
 
-	// Репозиторий и обработчики
+	// Репозиторий
 	taskRepo := repository.NewTaskRepository(gormDB)
+
+	// Хендлеры (используют репозиторий)
 	taskHandler := handler.NewTaskHandler(taskRepo)
 
-	// Echo и сервер
 	e := echo.New()
-	srv := server.NewServer(e)
-	srv.RegisterRoutes(taskHandler)
 
-	if err := srv.Start(cfg.HTTPPort); err != nil {
-		log.Fatalf("failed to start server: %v", err)
-	}
+	// Роуты (те же, что были в оригинале)
+	e.POST("/tasks", taskHandler.PostTask)
+	e.GET("/tasks", taskHandler.ListTasks)
+	e.GET("/tasks/:id", taskHandler.GetTask)
+	e.PATCH("/tasks/:id", taskHandler.UpdateTask)
+	e.DELETE("/tasks/:id", taskHandler.DeleteTask)
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
